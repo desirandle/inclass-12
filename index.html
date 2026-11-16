@@ -1,0 +1,121 @@
+<!-- Step 1 — Identity: full name (required, at least one A–Z/a–z letter; otherwise only A–Z/a–z letters, 
+ ordinary spaces, hyphens, and apostrophes), campus email (required, exact domain student.gsu.edu, 
+ compared case-insensitively), fictional student ID (exactly 9 digits, first digit 1–9). 
+the simplified name rule is for this exercise, not a production policy for real names. -->
+
+<!-- Step 2 — Security: practice password (8+ characters, at least one A–Z uppercase, a–z lowercase, digit, 
+ and non-letter/non-digit/non-whitespace symbol) with a live requirements checklist; required confirmation 
+ that exactly matches, without trimming password values. -->
+
+<!-- Step 3 — Profile: membership tier (radio: Basic $25 / Standard $50 / Deluxe $100), interests (multi-select, 1–3 choices),
+optional bio (140 chars, live counter), terms checkbox (required). -->
+
+<!-- Review step: a summary of non-secret entered data with an Edit button per section, then a final submit that runs 
+full validation. Show only a password-set indicator, never the password or confirmation.
+Progress indicator; Back buttons must never lose data; the Review step must re-run all 
+validation (users may have navigated with stale data). -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> In Class 12</title>
+  <link rel="stylesheet" href="style.css">
+  </head>
+<body>
+  <h1> Welcome to my submission form!</h1>
+  <p> Please fill out the fields below.</p>
+
+<div id="summary" hidden tabindex="-1"></div>
+
+<!-- using native html validation module, regular expressions  -->
+<form action="/register" method="post" novalidate>
+
+  <!-- full name (required, at least one A–Z/a–z letter; otherwise only A–Z/a–z letters, 
+  ordinary spaces, hyphens, and apostrophes)   -->
+  <label for="name"> Your Full Name: </label>
+  <input id="name" name="name" type="text"
+         pattern="[a-zA-Z\s-']+$"
+         title="Letters, spaces, hypens, and apostrophes only">
+
+  <!-- campus email (required, exact domain student.gsu.edu, 
+  compared case-insensitively) -->
+  <label for="email"> Email: </label>
+  <input id="email" name="email" type="email" required
+         title="Please Enter a valid email, e.g. example@gmail.com ">
+
+  <!-- fictional student ID (exactly 9 digits, first digit 1–9) -->
+  <label for="student-id"> Student ID: (9 digits) </label>
+  <input id="student-id" name="student-id" type="text"
+         pattern="[1-9]\d{8}$"
+         title="Nine digits, e.g. 002510745">
+
+  <!-- practice password (8+ characters, at least one A–Z uppercase, a–z lowercase, digit, 
+  and non-letter/non-digit/non-whitespace symbol)        -->
+  <label id="password" for="password">Password: </label>
+  <input id="password" name="password" type="password" required minlength="8" 
+         pattern="[a-zA-Z0-9\s]"
+         title="Only letters and digits">
+
+  <label id="password2" for="password2">Confirm Password: </label>
+  <input id="password2" name="password2" type="password" >
+
+  <button type="submit">Create account! </button>
+</form>
+
+<script>
+const form = document.querySelector("form");
+const password = document.querySelector("#password");
+const summary = document.querySelector("#summary");
+const rules = [
+  { label: "At least 8 characters", test: function (v) { return v.length >= 8; } },
+  { label: "An uppercase letter", test: function (v) { return /[A-Z]/.test(v); } },
+  { label: "A lowercase letter", test: function (v) { return /[a-z]/.test(v); } },
+  { label: "A digit", test: function (v) { return /\d/.test(v); } },
+  { label: "A non-letter/non-digit/non-whitespace symbol", test: function (v) { return /[^a-zA-Z0-9\s]/.test(v); } }
+  // TODO: add lowercase, digit, and non-letter/non-digit/non-whitespace symbol rules.
+];
+function update() {
+  const list = document.querySelector("#rules");
+  list.replaceChildren();
+  rules.forEach(function (rule) {
+    const item = document.createElement("li");
+    item.textContent = (rule.test(password.value) ? "Met: " : "Needed: ") + rule.label;
+    list.appendChild(item);
+  });
+}
+password.addEventListener("input", function () {
+  update();
+  summary.hidden = true;
+  document.querySelector("#result").textContent = "";
+  if (password.getAttribute("aria-invalid") === "true") showError();
+});
+function showError() {
+  const missing = rules.filter(function (rule) { return !rule.test(password.value); });
+  password.setAttribute("aria-invalid", String(missing.length > 0));
+  document.querySelector("#passwordError").textContent = missing.map(function (rule) { return rule.label; }).join("; ");
+  return missing.length === 0;
+}
+form.addEventListener("submit", function (event) {
+  event.preventDefault();
+  if (showError()) {
+    summary.hidden = true;
+    document.querySelector("#result").textContent = "Implemented requirements met. Nothing sent.";
+  } else {
+    summary.replaceChildren();
+    const heading = document.createElement("h2");
+    heading.textContent = "There is a problem";
+    const link = document.createElement("a");
+    link.href = "#password";
+    link.textContent = "Review the password requirements";
+    link.addEventListener("click", function (event) { event.preventDefault(); password.focus(); });
+    summary.append(heading, link);
+    summary.hidden = false;
+    summary.focus();
+  }
+});
+update();
+</script>
+</body>
+</html>
